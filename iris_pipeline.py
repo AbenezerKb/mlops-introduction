@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.datasets import load_iris
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score
+from sklearn.model_selection import train_test_split
+
 
 def load_dataset():
     iris = load_iris()
@@ -10,6 +14,25 @@ def load_dataset():
         lambda x: str(iris.target_names[int(x["species"])]), axis=1
     )
     return df
+
+
+def train(df):
+    X_train, X_test, y_train, y_test = train_test_split(
+        df.iloc[:, :-1], df["species"], test_size=0.2, random_state=42
+    )
+
+    model = LogisticRegression(max_iter=200)
+    model.fit(X_train, y_train)
+
+    return model, X_train, X_test, y_train, y_test
+
+
+def get_accuracy(model, X_test, y_test):
+    predictions = model.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+
+    return accuracy
+
 
 
 def plot_feature(df, feature):
@@ -38,8 +61,20 @@ def plot_features(df):
     plt.show()
 
 
+def plot_model(model, X_test, y_test):
+    # Plot the confusion matrix for the model
+    ConfusionMatrixDisplay.from_estimator(estimator=model, X=X_test, y=y_test)
+    plt.title("Confusion Matrix")
+    plt.show()
+
+
 if __name__ == "__main__":
     iris_df = load_dataset()
+    model, X_train, X_test, y_train, y_test = train(iris_df)
+    accuracy = get_accuracy(model, X_test, y_test)
+    print(f"Accuracy: {accuracy:.2f}")
    
     plot_feature(iris_df, "sepal length (cm)")
     plot_features(iris_df)
+    plot_model(model, X_test, y_test)
+
